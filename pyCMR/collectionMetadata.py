@@ -12,11 +12,11 @@ from .GenerateMetadata import GenerateMetadata
 
 import xml.etree.ElementTree as ET
 
+
 class CollectionCMRXMLTags(GenerateMetadata):
 
     def __init__(self, configFilePath="/home/marouane/PycharmProjects/cmr/cmr.cfg.example"):
         GenerateMetadata.__init__(self, configFilePath=configFilePath)
-
 
     def getCampaignCMRTags(self, topTag, ds_short_name):
         """
@@ -26,15 +26,15 @@ class CollectionCMRXMLTags(GenerateMetadata):
         :return:
         """
 
-        data = self.getDataFromDatabase(tableName="ds_project", ds_short_name=ds_short_name)
+        data = self.getDataFromDatabase(
+            tableName="ds_project", ds_short_name=ds_short_name)
         for ele in data:
             Campaign = ET.SubElement(topTag, "Campaign")
             ShortName = ET.SubElement(Campaign, "ShortName")
             ShortName.text = ele['project_short_name']
         return topTag
 
-
-    def discardNoneValues(self, parentTag,subTagName, tagValue):
+    def discardNoneValues(self, parentTag, subTagName, tagValue):
         """
         This function is to remove the non value from the tag
         :param parentTag: Top level tag
@@ -46,35 +46,39 @@ class CollectionCMRXMLTags(GenerateMetadata):
             generatedTag = ET.SubElement(parentTag, subTagName)
             generatedTag.text = tagValue
 
-
     def getScienceKeywordsTags(self, toptag, ds_short_name):
 
-        data = self.getDataFromDatabase(tableName="science_keyword", ds_short_name=ds_short_name)
+        data = self.getDataFromDatabase(
+            tableName="science_keyword", ds_short_name=ds_short_name)
 
         for ele in data:
             ScienceKeyword = ET.SubElement(toptag, "ScienceKeyword")
             CategoryKeyword = ET.SubElement(ScienceKeyword, "CategoryKeyword")
             CategoryKeyword.text = 'EARTH SCIENCE'
 
-            self.discardNoneValues(ScienceKeyword,'TopicKeyword',ele['topic'])
+            self.discardNoneValues(
+                ScienceKeyword, 'TopicKeyword', ele['topic'])
             self.discardNoneValues(ScienceKeyword, 'TermKeyword', ele['term'])
 
-            VariableLevel1Keyword = ET.SubElement(ScienceKeyword, "VariableLevel1Keyword")
+            VariableLevel1Keyword = ET.SubElement(
+                ScienceKeyword, "VariableLevel1Keyword")
 
-            self.discardNoneValues(VariableLevel1Keyword, 'Value', ele['var_level_1'])
+            self.discardNoneValues(VariableLevel1Keyword,
+                                   'Value', ele['var_level_1'])
 
             if ele['var_level_2']:
-                VariableLevel2Keyword = ET.SubElement(ScienceKeyword, "VariableLevel2Keyword")
+                VariableLevel2Keyword = ET.SubElement(
+                    ScienceKeyword, "VariableLevel2Keyword")
                 value = ET.SubElement(VariableLevel2Keyword, "Value")
                 value.text = ele['var_level_2']
 
             if ele['var_level_3']:
-                VariableLevel3Keyword = ET.SubElement(ScienceKeyword, "VariableLevel3Keyword")
+                VariableLevel3Keyword = ET.SubElement(
+                    ScienceKeyword, "VariableLevel3Keyword")
                 value = ET.SubElement(VariableLevel3Keyword, "Value")
                 value.text = ele['var_level_3']
 
         return toptag
-
 
     def getPlatformInstrumentCMRtag(self, topTag, ds_short_name):
         """
@@ -84,20 +88,20 @@ class CollectionCMRXMLTags(GenerateMetadata):
         :return:
         """
 
-        data = self.getDataFromDatabase(tableName="ds_instrument", ds_short_name=ds_short_name)
-        platforms_inst=[]
+        data = self.getDataFromDatabase(
+            tableName="ds_instrument", ds_short_name=ds_short_name)
+        platforms_inst = []
         for ele in data:
             platforms_inst.append(ele['platform_short_name'])
 
-
-
         for ele in set(platforms_inst):
             platform_short_name = ele
-            Platform = self.getPlatformsCMRtag(topTag=topTag, short_name=platform_short_name)
-            data = self.getDataFromDatabase(tableName="ds_instrument", ds_short_name=ds_short_name, platform_short_name=platform_short_name)
+            Platform = self.getPlatformsCMRtag(
+                topTag=topTag, short_name=platform_short_name)
+            data = self.getDataFromDatabase(
+                tableName="ds_instrument", ds_short_name=ds_short_name, platform_short_name=platform_short_name)
             Instruments = ET.SubElement(Platform, "Instruments")
             for ins in data:
-
 
                 Instrument = ET.SubElement(Instruments, "Instrument")
 
@@ -111,10 +115,10 @@ class CollectionCMRXMLTags(GenerateMetadata):
 
         return topTag
 
-
     def getPlatformsCMRtag(self, topTag, short_name):
 
-        data = self.getDataFromDatabase(tableName="platform", short_name=short_name)
+        data = self.getDataFromDatabase(
+            tableName="platform", short_name=short_name)
         data = data[0]
 
         Platform = ET.SubElement(topTag, "Platform")
@@ -132,7 +136,6 @@ class CollectionCMRXMLTags(GenerateMetadata):
         Type.text = data['type']
 
         return Platform
-
 
     def getOnlineRessourcesCMRtags(self, topTag, ds_urls):
         """
@@ -158,7 +161,6 @@ class CollectionCMRXMLTags(GenerateMetadata):
 
         return topTag
 
-
     def getCommunData(self, data, listToCompare):
         """
         To get common data with commun keys
@@ -169,7 +171,6 @@ class CollectionCMRXMLTags(GenerateMetadata):
         keys = list(set(listToCompare).intersection(data))
         return {k: data[k] for k in keys}
 
-
     def generateCollectionXMLToIngest(self, ds_short_name="hs3cpl"):
         """
 
@@ -177,7 +178,8 @@ class CollectionCMRXMLTags(GenerateMetadata):
         :return: XML data according to CMR format
         """
 
-        data = self.getDataFromDatabase(tableName="CMRCollectionView", ShortName=ds_short_name)
+        data = self.getDataFromDatabase(
+            tableName="CMRCollectionView", ShortName=ds_short_name)
 
         if not data:
             print("Error occurred while ingesting this dataset; Please check if the dataset exists and if you have the right to ingest to CMR")
@@ -187,27 +189,26 @@ class CollectionCMRXMLTags(GenerateMetadata):
         if not data['Visible']:
             return "The data is flagged as not Visible"
 
-        topList = ['ShortName','VersionId', 'InsertTime', 'LastUpdate', 'LongName', 'DataSetId', 'Description',
+        topList = ['ShortName', 'VersionId', 'InsertTime', 'LastUpdate', 'LongName', 'DataSetId', 'Description',
                    'Orderable', 'Visible', 'ProcessingLevelId']
 
         # ====Top level tag =====
         top = ET.Element("Collection")
 
         for ele in topList:
-            tagToAdd=ET.SubElement(top, ele)
-            if type(data[ele])==bool:
+            tagToAdd = ET.SubElement(top, ele)
+            if type(data[ele]) == bool:
                 data[ele] = self.parseBoolean(data[ele])
 
-            tagToAdd.text =data[ele]
+            tagToAdd.text = data[ele]
 
-        ArchiveCenter=ET.SubElement(top, "ArchiveCenter")
-        ArchiveCenter.text="NASA/MSFC/GHRC"
+        ArchiveCenter = ET.SubElement(top, "ArchiveCenter")
+        ArchiveCenter.text = "NASA/MSFC/GHRC"
 
-        Price=ET.SubElement(top, "Price")
-        Price.text='0.0'
+        Price = ET.SubElement(top, "Price")
+        Price.text = '0.0'
 
         # =============Spatial Keywords tag ========================#
-
 
         SpatialKeywords = ET.Element("SpatialKeywords")
         Keyword = ET.SubElement(SpatialKeywords, "Keyword")
@@ -230,8 +231,8 @@ class CollectionCMRXMLTags(GenerateMetadata):
         RangeDateTime = ET.SubElement(Temporal, "RangeDateTime")
 
         for ele in temporalList:
-            newTag=ET.SubElement(RangeDateTime, ele)
-            newTag.text=data[ele]
+            newTag = ET.SubElement(RangeDateTime, ele)
+            newTag.text = data[ele]
 
         top.append(Temporal)
 
@@ -272,24 +273,28 @@ class CollectionCMRXMLTags(GenerateMetadata):
         # =============ScienceKeyword tag ========================#
 
         ScienceKeywords = ET.Element("ScienceKeywords")
-        ScienceKeywords = self.getScienceKeywordsTags(toptag=ScienceKeywords, ds_short_name=ds_short_name)
+        ScienceKeywords = self.getScienceKeywordsTags(
+            toptag=ScienceKeywords, ds_short_name=ds_short_name)
 
         top.append(ScienceKeywords)
 
         Platforms = ET.Element("Platforms")
-        Platforms = self.getPlatformInstrumentCMRtag(topTag=Platforms, ds_short_name=ds_short_name)
+        Platforms = self.getPlatformInstrumentCMRtag(
+            topTag=Platforms, ds_short_name=ds_short_name)
         top.append(Platforms)
 
         # =====================Additional Attributes===========#
 
-        ds_urls = self.getDataFromDatabase(tableName="ds_urls", ds_short_name=ds_short_name)
+        ds_urls = self.getDataFromDatabase(
+            tableName="ds_urls", ds_short_name=ds_short_name)
         doi = self.geturlType(data=ds_urls, ds_url_type='doi')
 
         doiAuthority = "http://dx.doi.org/"
         doi = doi.split(doiAuthority)
 
         AdditionalAttributes = ET.Element("AdditionalAttributes")
-        AdditionalAttribute = ET.SubElement(AdditionalAttributes, "AdditionalAttribute")
+        AdditionalAttribute = ET.SubElement(
+            AdditionalAttributes, "AdditionalAttribute")
         Name = ET.SubElement(AdditionalAttribute, "Name")
         Name.text = 'identifier_product_doi'
         DataType = ET.SubElement(AdditionalAttribute, "DataType")
@@ -299,7 +304,8 @@ class CollectionCMRXMLTags(GenerateMetadata):
         Value = ET.SubElement(AdditionalAttribute, "Value")
         Value.text = doi[1]
 
-        AdditionalAttribute = ET.SubElement(AdditionalAttributes, "AdditionalAttribute")
+        AdditionalAttribute = ET.SubElement(
+            AdditionalAttributes, "AdditionalAttribute")
         Name = ET.SubElement(AdditionalAttribute, "Name")
         Name.text = 'identifier_product_doi_authority'
         DataType = ET.SubElement(AdditionalAttribute, "DataType")
@@ -315,7 +321,8 @@ class CollectionCMRXMLTags(GenerateMetadata):
 
         Campaigns = ET.Element("Campaigns")
 
-        Campaigns = self.getCampaignCMRTags(topTag=Campaigns, ds_short_name=ds_short_name)
+        Campaigns = self.getCampaignCMRTags(
+            topTag=Campaigns, ds_short_name=ds_short_name)
 
         top.append(Campaigns)
 
@@ -333,7 +340,8 @@ class CollectionCMRXMLTags(GenerateMetadata):
         # ======Online Resources========#
         OnlineResources = ET.Element("OnlineResources")
 
-        OnlineResources = self.getOnlineRessourcesCMRtags(topTag=OnlineResources, ds_urls=ds_urls)
+        OnlineResources = self.getOnlineRessourcesCMRtags(
+            topTag=OnlineResources, ds_urls=ds_urls)
 
         OnlineResource = ET.SubElement(OnlineResources, "OnlineResource")
         URL = ET.SubElement(OnlineResource, "URL")
@@ -359,7 +367,8 @@ class CollectionCMRXMLTags(GenerateMetadata):
         Spatial = ET.Element("Spatial")
         SpatialCoverageType = ET.SubElement(Spatial, "SpatialCoverageType")
         SpatialCoverageType.text = 'Horizontal'
-        HorizontalSpatialDomain = ET.SubElement(Spatial, "HorizontalSpatialDomain")
+        HorizontalSpatialDomain = ET.SubElement(
+            Spatial, "HorizontalSpatialDomain")
         Geometry = ET.SubElement(HorizontalSpatialDomain, "Geometry")
         CoordinateSystem = ET.SubElement(Geometry, "CoordinateSystem")
         CoordinateSystem.text = 'CARTESIAN'
@@ -369,11 +378,12 @@ class CollectionCMRXMLTags(GenerateMetadata):
                     'SouthBoundingCoordinate']
 
         for ele in geomList:
-            newTag= ET.SubElement(BoundingRectangle, ele)
-            newTag.text=str(data[ele])
+            newTag = ET.SubElement(BoundingRectangle, ele)
+            newTag.text = str(data[ele])
 
-        GranuleSpatialRepresentation=ET.SubElement(Spatial, "GranuleSpatialRepresentation")
-        GranuleSpatialRepresentation.text='CARTESIAN'
+        GranuleSpatialRepresentation = ET.SubElement(
+            Spatial, "GranuleSpatialRepresentation")
+        GranuleSpatialRepresentation.text = 'CARTESIAN'
 
         top.append(Spatial)
 
@@ -387,6 +397,7 @@ class CollectionCMRXMLTags(GenerateMetadata):
 
 
 if __name__ == "__main__":
-    ghrc = CollectionCMRXMLTags(configFilePath="/home/marouane/PycharmProjects/cmr/cmr.cfg.example")
-    data= ghrc.generateCollectionXMLToIngest(ds_short_name=sys.argv[1])
+    ghrc = CollectionCMRXMLTags(
+        configFilePath="/home/marouane/PycharmProjects/cmr/cmr.cfg.example")
+    data = ghrc.generateCollectionXMLToIngest(ds_short_name=sys.argv[1])
     print(data)

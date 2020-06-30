@@ -10,7 +10,6 @@ import json
 import logging
 import os
 
-
 import shutil
 from datetime import datetime
 import xml.etree.ElementTree as ET
@@ -22,7 +21,8 @@ except ImportError:
 import requests
 
 from .Result import Collection, Granule
-from .xmlParser import XmlDictConfig, ComaSeperatedToListJson,ComaSeperatedDataToListJson
+from .xmlParser import XmlDictConfig, ComaSeperatedToListJson
+from .xmlParser import ComaSeperatedDataToListJson
 
 class CMR(object):
     def __init__(self, configFilePath=''):

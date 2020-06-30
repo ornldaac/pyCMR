@@ -13,6 +13,7 @@ from configparser import ConfigParser
 
 import xml.etree.ElementTree as ET
 
+
 class GenerateMetadata():
     def __init__(self, configFilePath="configFile.cfg"):
         """
@@ -35,7 +36,6 @@ class GenerateMetadata():
 
         return self.REST_HOST_URL + "api/v2/" + self.DATABASENAME + "/_table/" + self.SCHEMA + "." + tableName + "?api_key=" + self.WR_API_KEY
 
-
     def getDataFromDatabase(self, tableName, **kwargs):
         """
 
@@ -47,22 +47,24 @@ class GenerateMetadata():
         filter = "&filter="
 
         andSign = ''
-        orderby=''
+        orderby = ''
 
         for ele in kwargs.keys():
-            orderby=ele
-            filter = filter + andSign + "(" + ele + '=' + urllib.quote_plus(kwargs[ele]) + ')'
+            orderby = ele
+            filter = filter + andSign + \
+                "(" + ele + '=' + urllib.quote_plus(kwargs[ele]) + ')'
             andSign = '%20AND%20'
 
         url = self.getRestAPIURL(tableName=tableName)
         url = url + filter
 
-        allresults=[]
+        allresults = []
 
         condition = True
         offset = 0
         while condition:
-            data = requests.get(url=url+'&orderby='+orderby+'&offset='+str(offset))
+            data = requests.get(url=url+'&orderby=' +
+                                orderby+'&offset='+str(offset))
             if not data.ok:
                 print(data.content)
                 return data.reason
@@ -76,7 +78,6 @@ class GenerateMetadata():
                 condition = False
 
         return allresults
-
 
     def generateCMRXMLTags(self, top, data):
         for key, value in data.items():
@@ -94,7 +95,7 @@ class GenerateMetadata():
         """
 
         for ele in listTagsName:
-            if data[ele]: # if the subtag has a value
+            if data[ele]:  # if the subtag has a value
                 tagToAdd = ET.SubElement(topTag, ele)
                 tagToAdd.text = data[ele]
 
@@ -113,5 +114,6 @@ class GenerateMetadata():
 
 
 if __name__ == "__main__":
-    ghrc = GenerateMetadata(configFilePath="/home/marouane/PycharmProjects/cmr/cmr.cfg.example")
-    data2=ghrc.getDataFromDatabase(tableName='ds_info',ims_visible='1')
+    ghrc = GenerateMetadata(
+        configFilePath="/home/marouane/PycharmProjects/cmr/cmr.cfg.example")
+    data2 = ghrc.getDataFromDatabase(tableName='ds_info', ims_visible='1')

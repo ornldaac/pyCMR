@@ -9,30 +9,35 @@ Unless required by applicable law or agreed to in writing, software distributed 
 from .GenerateMetadata import GenerateMetadata
 import xml.etree.ElementTree as ET
 
+
 class GranuleCMRXMLTags(GenerateMetadata):
 
     def __init__(self, configFilePath="/home/marouane/PycharmProjects/cmr/cmr.cfg.example"):
         GenerateMetadata.__init__(self, configFilePath=configFilePath)
 
-    def getMultipleGranulesXML(self,ds_short_name):
+    def getMultipleGranulesXML(self, ds_short_name):
         """
 
         :param ds_short_name: provide a ds_short name for the data set
         :return: List of data
         """
-        data=self.getDataFromDatabase(tableName='CMRGranuleView',ShortName=ds_short_name )
+        data = self.getDataFromDatabase(
+            tableName='CMRGranuleView', ShortName=ds_short_name)
         ds_urls = self.getDataFromDatabase(tableName="ds_urls",
                                            ds_short_name=ds_short_name)  # get ds urls from database
 
         OnlineResources = ET.Element("OnlineResources")
-        OnlineResources = self.getOnlineRessourcesCMRtags(topTag=OnlineResources, ds_urls=ds_urls)
+        OnlineResources = self.getOnlineRessourcesCMRtags(
+            topTag=OnlineResources, ds_urls=ds_urls)
 
-        XMLsGranule=[]
+        XMLsGranule = []
 
         for ele in data:
-            OnlineAccess = self.getAccessURLS(ds_urls=ds_urls, granule_name=ele['GranuleUR'],OnlineResources=OnlineResources)
+            OnlineAccess = self.getAccessURLS(
+                ds_urls=ds_urls, granule_name=ele['GranuleUR'], OnlineResources=OnlineResources)
 
-            XMLsGranule.append(self.generateGranuleXMLToIngest(granule_name=ele['GranuleUR'], accessURLS=OnlineAccess,data=ele))
+            XMLsGranule.append(self.generateGranuleXMLToIngest(
+                granule_name=ele['GranuleUR'], accessURLS=OnlineAccess, data=ele))
         return XMLsGranule
 
     def getOnlineRessourcesCMRtags(self, topTag, ds_urls):
@@ -59,14 +64,15 @@ class GranuleCMRXMLTags(GenerateMetadata):
 
         return topTag
 
-    def generateGranuleXMLToIngest(self, granule_name,accessURLS=None, data=None):
+    def generateGranuleXMLToIngest(self, granule_name, accessURLS=None, data=None):
         """
 
         :param data: a dictionary of the data you want to ingest to CMR
         :return: XML data according to CMR format
         """
         if None in [data]:
-            data = self.getDataFromDatabase(tableName="CMRGranuleView", GranuleUR=granule_name)
+            data = self.getDataFromDatabase(
+                tableName="CMRGranuleView", GranuleUR=granule_name)
             data = data[0]
 
         if not data:
@@ -79,23 +85,27 @@ class GranuleCMRXMLTags(GenerateMetadata):
         Granule = ET.Element("Granule")
         topList = ['GranuleUR', 'InsertTime', 'LastUpdate']
 
-        top=self.addsubTags(topTag=Granule,listTagsName=topList,data=data) #add subtags to Granule
+        # add subtags to Granule
+        top = self.addsubTags(topTag=Granule, listTagsName=topList, data=data)
 
         # =============Collection tag tag ========================#
 
         Collection = ET.Element("Collection")
 
-        collList=['ShortName','VersionId'] # Tags for collection list
+        collList = ['ShortName', 'VersionId']  # Tags for collection list
 
-        Collection = self.addsubTags(topTag=Collection,listTagsName=collList,data=data)
+        Collection = self.addsubTags(
+            topTag=Collection, listTagsName=collList, data=data)
 
         top.append(Collection)
 
         # =============TDataGranule tag ========================#
-        DataGranule= ET.Element("DataGranule")
-        DataGranuleList=['SizeMBDataGranule','DayNightFlag','ProductionDateTime']
+        DataGranule = ET.Element("DataGranule")
+        DataGranuleList = ['SizeMBDataGranule',
+                           'DayNightFlag', 'ProductionDateTime']
 
-        DataGranule= self.addsubTags(topTag=DataGranule,listTagsName=DataGranuleList,data=data)
+        DataGranule = self.addsubTags(
+            topTag=DataGranule, listTagsName=DataGranuleList, data=data)
 
         top.append(DataGranule)
 
@@ -104,46 +114,53 @@ class GranuleCMRXMLTags(GenerateMetadata):
         RangeDateTime = ET.SubElement(Temporal, "RangeDateTime")
         temporalList = ["BeginningDateTime"]
 
-        if data['EndingDateTime']: # if it has stop data
+        if data['EndingDateTime']:  # if it has stop data
             temporalList.append("EndingDateTime")
 
-        self.addsubTags(topTag=RangeDateTime,listTagsName=temporalList,data=data)
+        self.addsubTags(topTag=RangeDateTime,
+                        listTagsName=temporalList, data=data)
 
         top.append(Temporal)
 
         # =============Spatial tag ========================#
         Spatial = ET.Element("Spatial")
-        HorizontalSpatialDomain = ET.SubElement(Spatial, "HorizontalSpatialDomain")
+        HorizontalSpatialDomain = ET.SubElement(
+            Spatial, "HorizontalSpatialDomain")
         Geometry = ET.SubElement(HorizontalSpatialDomain, "Geometry")
         BoundingRectangle = ET.SubElement(Geometry, "BoundingRectangle")
 
         geomList = ['WestBoundingCoordinate', 'NorthBoundingCoordinate', 'EastBoundingCoordinate',
                     'SouthBoundingCoordinate']
 
-        self.addsubTags(topTag=BoundingRectangle,listTagsName=geomList,data=data)
+        self.addsubTags(topTag=BoundingRectangle,
+                        listTagsName=geomList, data=data)
 
         top.append(Spatial)
 
         # =============Price tag ========================#
-        Price= ET.Element("Price")
-        Price.text='0.0'
+        Price = ET.Element("Price")
+        Price.text = '0.0'
         top.append(Price)
 
         # ========Access URLs===========================#
         if None in [accessURLS]:
+            # get ds urls from database
             ds_urls = self.getDataFromDatabase(tableName="ds_urls",
-                                               ds_short_name=ds_short_name)  # get ds urls from database
+                                               ds_short_name=ds_short_name)
 
             OnlineResources = ET.Element("OnlineResources")
-            OnlineResources = self.getOnlineRessourcesCMRtags(topTag=OnlineResources, ds_urls=ds_urls)
-            accessURLS=self.getAccessURLS(granule_name=granule_name, ds_urls=ds_urls, OnlineResources=OnlineResources)
+            OnlineResources = self.getOnlineRessourcesCMRtags(
+                topTag=OnlineResources, ds_urls=ds_urls)
+            accessURLS = self.getAccessURLS(
+                granule_name=granule_name, ds_urls=ds_urls,
+                OnlineResources=OnlineResources)
 
         top.append(accessURLS['OnlineAccessURLs'])
         top.append(accessURLS['OnlineResources'])
 
         #==============Orderable tag =====================#
-        Orderable=ET.SubElement(top, "Orderable")
-        Orderable.text=self.parseBoolean(data['Orderable'])
+        Orderable = ET.SubElement(top, "Orderable")
+        Orderable.text = self.parseBoolean(data['Orderable'])
 
         # ==============DataFormat tag =====================#
         DataFormat = ET.SubElement(top, "DataFormat")
@@ -152,12 +169,13 @@ class GranuleCMRXMLTags(GenerateMetadata):
 
         # =======AssociatedDIFs ================#
 
-    def getAccessURLS(self, ds_urls, granule_name,OnlineResources):
+    def getAccessURLS(self, ds_urls, granule_name, OnlineResources):
         OnlineAccessURLs = ET.Element("OnlineAccessURLs")
         OnlineAccessURL = ET.SubElement(OnlineAccessURLs, "OnlineAccessURL")
         URL = ET.SubElement(OnlineAccessURL, "URL")
 
-        URL.text = self.geturlType(data=ds_urls, ds_url_type='data_access')+granule_name
+        URL.text = self.geturlType(
+            data=ds_urls, ds_url_type='data_access')+granule_name
 
         opendapURL = self.geturlType(data=ds_urls, ds_url_type='opendap')
 
@@ -169,7 +187,8 @@ class GranuleCMRXMLTags(GenerateMetadata):
             Type = ET.SubElement(OnlineResource, "Type")
             Type.text = "OPENDAP DATA"
 
-        return {'OnlineAccessURLs':OnlineAccessURLs, 'OnlineResources':OnlineResources}
+        return {'OnlineAccessURLs': OnlineAccessURLs,
+                'OnlineResources': OnlineResources}
 
     def geturlType(self, data, ds_url_type):
         for ele in data:
@@ -177,10 +196,11 @@ class GranuleCMRXMLTags(GenerateMetadata):
                 return ele['ds_url']
         return None
 
-if __name__ == "__main__":
-    ghrc = GranuleCMRXMLTags("/home/marouane/PycharmProjects/cmr/cmr.cfg.example")
-    #print ghrc.generateGranuleXMLToIngest(granule_name="HS3_CPL_layers_14212b_20140829.txt")
-    data=ghrc.getMultipleGranulesXML(ds_short_name='rasipapag')
-    #data=ghrc.generateGranuleXMLToIngest(granule_name='RASI_Papagayo_2003.nc')
-    print(data)
 
+if __name__ == "__main__":
+    ghrc = GranuleCMRXMLTags(
+        "/home/marouane/PycharmProjects/cmr/cmr.cfg.example")
+    # print ghrc.generateGranuleXMLToIngest(granule_name="HS3_CPL_layers_14212b_20140829.txt")
+    data = ghrc.getMultipleGranulesXML(ds_short_name='rasipapag')
+    # data=ghrc.generateGranuleXMLToIngest(granule_name='RASI_Papagayo_2003.nc')
+    print(data)
